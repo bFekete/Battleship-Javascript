@@ -2,9 +2,13 @@
  * battleship.js
  *  
  */
+var OFFSET = 550; // Where the cpuGrid starts
+
 var canvas, context;
 var squareHeight, squareWidth;
 var radioButton;
+
+var userGrid, cpuGrid;
 
 function ship(name, size) {
     this.name = name;
@@ -24,13 +28,14 @@ function start() {
     canvas.addEventListener('click', handleClick);
     canvas.addEventListener('mousemove', handleMove);
     context = canvas.getContext("2d");
+    context.strokeStyle = "black";
 
     canvas.height = 500;
     canvas.width = 1050;
     squareHeight = 50;
     squareWidth = 50;
-    initializeGrid();
 
+    initializeGrid();
     container.appendChild(canvas);
 }
 
@@ -99,24 +104,31 @@ function handleClick(e) {
 
     xCoord = Math.floor((xpos - canvas.getBoundingClientRect().left) / squareWidth) * squareWidth;
     yCoord = Math.floor((ypos - canvas.getBoundingClientRect().top) / squareHeight) * squareHeight;
-    context.fillStyle = "red";
 
-    if (xCoord !== 500) { // So it doesn't set the seperator between the boards
-        context.fillRect(xCoord, yCoord, squareWidth, squareHeight);
-        context.strokeRect(xCoord, yCoord, squareWidth, squareHeight);
-    }
-
+    var placeShip = false;
+    /** Place ship **/
     for (var i = 0; i < radioButton.length; i++) {
         if (radioButton[i].checked) {
             radioButton[i].checked = false;
             radioButton[i].disabled = true;
+            placeShip = true;
+        }
+    }
+    
+    /** Attack **/
+    if (placeShip === false) {
+        if (xCoord >= OFFSET) {
+            cpuGrid[(xCoord - OFFSET) / 50][yCoord / 50] = "2";
+            drawGrid(cpuGrid, OFFSET);
+        } else if (xCoord < OFFSET) {
+            userGrid[xCoord / 50][yCoord / 50] = "2";
+            drawGrid(userGrid, 0);
         }
     }
 }
 
 function updateGrid(color, xCoord, yCoord) {
     context.fillStyle = color;
-    context.strokeStyle = "black";
     context.fillRect(xCoord, yCoord, squareWidth, squareHeight);
     context.strokeRect(xCoord, yCoord, squareWidth, squareHeight);
 }
@@ -126,22 +138,50 @@ function updateGrid(color, xCoord, yCoord) {
  * @returns {undefined}
  */
 function initializeGrid() {
+    userGrid = new Array(10);
+    cpuGrid = new Array(10);
     for (var i = 0; i < 10; i++) {
-        for (var k = 0; k < 10; k++) {
-            context.fillStyle = "blue";
-            context.strokeStyle = "black";
-            context.fillRect(i * squareWidth, k * squareHeight, squareWidth, squareHeight);
-            context.strokeRect(i * squareWidth, k * squareHeight, squareWidth, squareHeight);
+        userGrid[i] = new Array(10);
+        cpuGrid[i] = new Array(10);
 
-            context.fillStyle = "blue";
-            context.strokeStyle = "black";
-            context.fillRect(i * squareWidth + 550, k * squareHeight, squareWidth, squareHeight);
-            context.strokeRect(i * squareWidth + 550, k * squareHeight, squareWidth, squareHeight);
+        for (var j = 0; j < 10; j++) {
+            userGrid[i][j] = "0";
+            cpuGrid[i][j] = "0";
+
         }
     }
 
+    drawGrid(userGrid, 0);
+    drawGrid(cpuGrid, OFFSET);
+
+    // Enables the radiobuttons
     for (var i = 0; i < radioButton.length; i++) {
         radioButton[i].disabled = false;
+    }
+}
+
+/**
+ * Helper method that draws rectangles based on grid.
+ * @param {type} grid 2d Array
+ * @param {type} offset Horizontal offset
+ * @returns {undefined}
+ */
+function drawGrid(grid, offset) {
+
+    for (var i = 0; i < 10; i++) {
+        for (var j = 0; j < 10; j++) {
+            if (grid[i][j] === "0") {
+                context.fillStyle = "blue";
+            } else if (grid[i][j] === "1") {
+                context.fillStyle = "gray";
+            } else if (grid[i][j] === "2") {
+                context.fillStyle = "red";
+            } else if (grid[i][j] === "3") {
+                context.fillStyle = "black";
+            }
+            context.fillRect(i * squareWidth + offset, j * squareHeight, squareWidth, squareHeight);
+            context.strokeRect(i * squareWidth + offset, j * squareHeight, squareWidth, squareHeight);
+        }
     }
 }
 
