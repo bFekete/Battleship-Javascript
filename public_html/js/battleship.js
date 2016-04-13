@@ -188,3 +188,8 @@ function drawGrid(grid, offset) {
 window.addEventListener("load", start, false);
 
 
+function makeComputerMove(){
+    
+}
+
+
