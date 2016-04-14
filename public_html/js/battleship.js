@@ -10,6 +10,12 @@ var radioButton;
 
 var userGrid, cpuGrid;
 
+//Variables to keep track of the Cpus move.
+var lastMove;
+var lastSuccessfulMove;
+var lastDirection;
+var LastSuccessfulDirection;
+
 function ship(name, size) {
     this.name = name;
     this.size = size;
@@ -127,9 +133,12 @@ function handleClick(e) {
 //    }
     x = xCoord / 50 - 11;
     console.log(x);
-    y = yCoord / 50
-    makePlayerMove(x, y);
-
+    y = yCoord / 50;
+    //makePlayerMove(x, y);
+    //drawGrid(cpuGrid, OFFSET);
+    while(didUserWin() === false){
+    makeComputerMove();
+    }
 
 }
 
@@ -178,16 +187,16 @@ function drawGrid(grid, offset) {
         for (var j = 0; j < 10; j++) {
             if (grid[i][j] === "0") {
                 context.fillStyle = "blue";
-            } else if (grid[i][j] === "1") {
+            } else if (grid[i][j] === "1") {//Open Water - Player
                 context.fillStyle = "gray";
-            } else if (grid[i][j] === "2") {
+            } else if (grid[i][j] === "2") { //Hit - Player/CPU
                 context.fillStyle = "red";
-            } else if (grid[i][j] === "3") {
+            } else if (grid[i][j] === "3") { //Miss - Player/CPU
                 context.fillStyle = "white";
-            } else if (grid[i][j] === "4") {
+            } else if (grid[i][j] === "4") { //Ship sunk - Player/CPU
                 context.fillStyle = "black";
-            } else if (grid[i][j] === "-1") { //Ship In background
-                context.fillStyle = "pink";
+            } else if (grid[i][j] === "-1") { //Ship In background - CPU
+                context.fillStyle = "blue";
             }
 
             context.fillRect(i * squareWidth + offset, j * squareHeight, squareWidth, squareHeight);
@@ -206,8 +215,26 @@ window.addEventListener("load", start, false);
  * 
  */
 function makeComputerMove() {
+    var tryingToFindValidMove = true;
+    while (true) {
+        xCordinate = Math.floor((Math.random() * 10));
+        yCordinate = Math.floor((Math.random() * 10));
+        if(cpuGrid[xCordinate][yCordinate] === "2" || cpuGrid[xCordinate][yCordinate] === "3" ){
+            continue;
+        }else if(cpuGrid[xCordinate][yCordinate] === "-1"){
+              cpuGrid[xCordinate][yCordinate] = "2";
+            drawGrid(cpuGrid, OFFSET);
+            return;
+          
+        }else{
+            cpuGrid[xCordinate][yCordinate] = "3";
+            drawGrid(cpuGrid, OFFSET);
+            return;
+        }
+    }
 
 }
+
 
 /**
  * Handles a players move and draws on the grid based on whether the move was
@@ -222,12 +249,49 @@ function makePlayerMove(x, y) {
     if (cpuGrid[x][y] === "0") { //Player has missed
         cpuGrid[x][y] = "3";
         drawGrid(cpuGrid, OFFSET);
-    } else if (cpuGrid[x][y] === "-1") {
+    } else if (cpuGrid[x][y] === "-1") { //Player has hit ship
+        cpuGrid[x][y] = "2";
+        drawGrid(cpuGrid, OFFSET);
+    }
 
+    //Checking the board for any ships left to see if the game is over
+    if (didUserWin() === true) {
+        console.log("you won")
     }
 }
+/**
+ * Function to return whether the user won or not
+ * 
+ * @returns {Boolean} Returns true if the user has won the game, False if not
+ */
+function didUserWin() {
+    for (i = 0; i < 10; i++) {
+        for (j = 0; j < 10; j++) {
+            if (cpuGrid[i][j] === "-1") {
+                return false;
+            }
+        }
+    }
+    return true;
+}
 
-function randomizeComputerShips() {
+/**
+ * Function to return whether the CPU won or not
+ * 
+ * @returns {Boolean} Returns true if the CPU has won the game, False if not
+ */
+function didCPUWin() {
+    for (i = 0; i < 10; i++) {
+        for (j = 0; j < 10; j++) {
+            if (userGrid[i][j] === "-1") {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+function  randomizeComputerShips() {
 
     xCordinate = 0;
     yCordinate = 0;
@@ -330,7 +394,7 @@ function randomizeComputerShips() {
                     for (i = xCordinate; i > xCordinate - sizeOfShip; i--) {
                         if (cpuGrid[i][yCordinate] === "-1") {
                             canPlace = false;
-                            break; 
+                            break;
                         }
                         canPlace = true;
                     }
