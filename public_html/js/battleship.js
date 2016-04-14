@@ -44,7 +44,7 @@ function handleMove(e) {
     // Since in Firefox e.offsetX/Y is undefined...
     xpos = e.offsetX === undefined ? e.layerX : e.offsetX;
     ypos = e.offsetY === undefined ? e.layerY : e.offsetY;
-    console.log("Canvas Move: (" + xpos + ", " + ypos + ")");
+    //console.log("Canvas Move: (" + xpos + ", " + ypos + ")");
 
     xCoord = Math.floor((xpos - canvas.getBoundingClientRect().left) / squareWidth) * squareWidth;
     yCoord = Math.floor((ypos - canvas.getBoundingClientRect().top) / squareHeight) * squareHeight;
@@ -114,17 +114,23 @@ function handleClick(e) {
             placeShip = true;
         }
     }
-    
-    /** Attack **/
-    if (placeShip === false) {
-        if (xCoord >= OFFSET) {
-            cpuGrid[(xCoord - OFFSET) / 50][yCoord / 50] = "2";
-            drawGrid(cpuGrid, OFFSET);
-        } else if (xCoord < OFFSET) {
-            userGrid[xCoord / 50][yCoord / 50] = "2";
-            drawGrid(userGrid, 0);
-        }
-    }
+
+//    /** Attack **/
+//    if (placeShip === false) {
+//        if (xCoord >= OFFSET) {
+//            cpuGrid[(xCoord - OFFSET) / 50][yCoord / 50] = "2";
+//            drawGrid(cpuGrid, OFFSET);
+//        } else if (xCoord < OFFSET) {
+//            userGrid[xCoord / 50][yCoord / 50] = "2";
+//            drawGrid(userGrid, 0);
+//        }
+//    }
+    x = xCoord / 50 - 11;
+    console.log(x);
+    y = yCoord / 50
+    makePlayerMove(x, y);
+
+
 }
 
 function updateGrid(color, xCoord, yCoord) {
@@ -150,7 +156,7 @@ function initializeGrid() {
 
         }
     }
-
+    randomizeComputerShips();
     drawGrid(userGrid, 0);
     drawGrid(cpuGrid, OFFSET);
 
@@ -177,8 +183,13 @@ function drawGrid(grid, offset) {
             } else if (grid[i][j] === "2") {
                 context.fillStyle = "red";
             } else if (grid[i][j] === "3") {
+                context.fillStyle = "white";
+            } else if (grid[i][j] === "4") {
                 context.fillStyle = "black";
+            } else if (grid[i][j] === "-1") { //Ship In background
+                context.fillStyle = "pink";
             }
+
             context.fillRect(i * squareWidth + offset, j * squareHeight, squareWidth, squareHeight);
             context.strokeRect(i * squareWidth + offset, j * squareHeight, squareWidth, squareHeight);
         }
@@ -187,9 +198,161 @@ function drawGrid(grid, offset) {
 
 window.addEventListener("load", start, false);
 
+/**
+ * Function that will handle the Computers move, based off a random number until
+ * the computer finds a ship. The move then will be based off an algorithim for
+ * the best possible move.
+ * 
+ * 
+ */
+function makeComputerMove() {
 
-function makeComputerMove(){
-    
 }
+
+/**
+ * Handles a players move and draws on the grid based on whether the move was
+ * successful or not
+ * @param {type} x X cordinate of the player's move.
+ * @param {type} y Y cordinate of the player's move.
+ * @returns {undefined}
+ */
+function makePlayerMove(x, y) {
+
+
+    if (cpuGrid[x][y] === "0") { //Player has missed
+        cpuGrid[x][y] = "3";
+        drawGrid(cpuGrid, OFFSET);
+    } else if (cpuGrid[x][y] === "-1") {
+
+    }
+}
+
+function randomizeComputerShips() {
+
+    xCordinate = 0;
+    yCordinate = 0;
+    verticalOrHorizontal = 0;
+    placeingShip = true;
+    var canPlace = false;
+    var sizeOfShips = [5, 4, 3, 3, 2];
+    var sizeOfShip;
+    //Iterating for the number of ships on the board
+
+    for (a = 0; a < 5; a++) {
+
+        sizeOfShip = sizeOfShips[a];
+        //Placeing the cruisuer
+        while (placeingShip === true) {
+
+            xCordinate = Math.floor((Math.random() * 10));
+            yCordinate = Math.floor((Math.random() * 10));
+            verticalOrHorizontal = Math.floor((Math.random() * 10) + 1);
+
+
+
+            if (verticalOrHorizontal > 5) { //Vertical 
+
+                if (!(yCordinate + sizeOfShip > 10)) {
+                    //Checking in a downwords direction if any spots are taken
+                    for (i = yCordinate; i < yCordinate + sizeOfShip; i++) {
+                        if (cpuGrid[xCordinate][i] === "-1") {
+                            canPlace = false;
+                            break;
+                        }
+                        canPlace = true;
+                    }
+                    if (canPlace === true) {
+                        //Filling the values out for the ship
+                        for (j = yCordinate; j < yCordinate + sizeOfShip; j++) {
+                            cpuGrid[xCordinate][j] = "-1";
+                            console.log(xCordinate + ", " + yCordinate);
+                        }
+                        placeingShip = false;
+                        canPlace = false;
+                    }
+                }
+
+
+
+
+                if (!(yCordinate - sizeOfShip < 0)) {
+                    if (placeingShip === true) {
+                        //Checking in a upwards direction if any spots are taken
+                        for (i = yCordinate; i > yCordinate - sizeOfShip; i--) {
+                            if (cpuGrid[xCordinate][i] === "-1") {
+                                canPlace = false;
+                                break;
+                            }
+                            canPlace = true;
+                        }
+                        if (canPlace === true) {
+                            //Filling the values out for the ship
+                            for (j = yCordinate; j > yCordinate - sizeOfShip; j--) {
+                                cpuGrid[xCordinate][j] = "-1";
+                                console.log(xCordinate + ", " + yCordinate);
+                            }
+                            placeingShip = false;
+                            canPlace = false;
+                        }
+
+                    }
+
+                }
+            } else { //Place the ship in the horizontal direction
+                if (!(xCordinate + sizeOfShip > 10)) {
+                    if (placeingShip === true) {
+
+                        //Checking in a right direction if any spots are taken
+                        for (i = xCordinate; i < xCordinate + sizeOfShip; i++) {
+                            if (cpuGrid[i][yCordinate] === "-1") {
+                                canPlace = false;
+                                break;
+                            }
+                            canPlace = true;
+                        }
+                        if (canPlace === true) {
+                            //Filling the values out for the ship
+                            for (j = xCordinate; j < xCordinate + sizeOfShip; j++) {
+                                cpuGrid[j][yCordinate] = "-1";
+                                console.log(xCordinate + ", " + yCordinate);
+                            }
+                            placeingShip = false;
+                            canPlace = false;
+                        }
+
+                    }
+                }
+                if (!(xCordinate - sizeOfShip < 0) && placeingShip === true) {
+
+
+
+                    //Checking in a left direction if any spots are taken
+                    for (i = xCordinate; i > xCordinate - sizeOfShip; i--) {
+                        if (cpuGrid[i][yCordinate] === "-1") {
+                            canPlace = false;
+                            break; 
+                        }
+                        canPlace = true;
+                    }
+
+                    if (canPlace === true) {
+                        //Filling the values out for the ship
+                        for (j = xCordinate; j > xCordinate - sizeOfShip; j--) {
+                            cpuGrid[j][yCordinate] = "-1";
+                            console.log(xCordinate + ", " + yCordinate);
+                        }
+                        placeingShip = false;
+                        canPlace = false;
+                    }
+                }
+
+            }
+        }
+        placeingShip = true;
+    }
+
+
+}
+
 
 
