@@ -131,7 +131,7 @@ function handleClick(e) {
             }
             makeComputerMove()
             drawGrid(userGrid, 0);
-            if(didCPUWin() === true){
+            if (didCPUWin() === true) {
                 isGameStarted = false;
             }
         }
@@ -231,14 +231,16 @@ function isValidShipPlacement(grid, x, y, isVertical, shipSize) {
  * Function that will handle the Computers move, based off a random number until
  * the computer finds a ship. The move then will be based off an algorithim for
  * the best possible move.
- * 
- * 
+ *  
  */
 function makeComputerMove() {
 
+    //Computer has not found a ship yet
     if (attackingShip === false) {
+
         //Trying to make a random move
         while (true) {
+
             //Getting random x and y coordinate
             var xCordinate = Math.floor((Math.random() * 10));
             var yCordinate = Math.floor((Math.random() * 10));
@@ -246,24 +248,25 @@ function makeComputerMove() {
             //Place already was hit or missed
             if (userGrid[xCordinate][yCordinate] === "2" ||
                     userGrid[xCordinate][yCordinate] === "3") {
-                //Try again
-                continue;
-            }//Hit
+                continue;//Try again
+            }
+            //Place is a ship
             else if (userGrid[xCordinate][yCordinate] === "1") {
                 userGrid[xCordinate][yCordinate] = "2";
                 drawGrid(userGrid, 0);
                 attackingShip = true;
                 indexPointX = xCordinate;
                 indexPointY = yCordinate;
-            }//Miss
+            }//Place is open water
             else if (userGrid[xCordinate][yCordinate] === "0") {
                 userGrid[xCordinate][yCordinate] = "3";
                 drawGrid(userGrid, 0);
                 return;
             }
+            //Seting Next Point
             if (attackingShip === true) {
-                //Seting Next Point
-                //Going Up
+
+                //Trying to go up
                 if (yCordinate - 1 >= 0
                         && userGrid[xCordinate][yCordinate - 1] !== "2"
                         && userGrid[xCordinate][yCordinate - 1] !== "3") {
@@ -272,7 +275,7 @@ function makeComputerMove() {
                     nextPointToGoY = yCordinate - 1;
                     console.log(nextPointToGoX + ", " + nextPointToGoY);
                     return;
-                }//Going Down 
+                }//Trying to go down
                 else if (yCordinate + 1 < 10
                         && userGrid[xCordinate][yCordinate + 1] !== "2"
                         && userGrid[xCordinate][yCordinate + 1] !== "3") {
@@ -282,7 +285,7 @@ function makeComputerMove() {
                     nextPointToGoY = yCordinate + 1;
                     return;
 
-                }//Going right 
+                }//Trying to go right
                 else if (xCordinate + 1 < 10
                         && userGrid[xCordinate + 1][yCordinate] !== "2"
                         && userGrid[xCordinate + 1][yCordinate] !== "3") {
@@ -292,7 +295,7 @@ function makeComputerMove() {
                     nextPointToGoY = yCordinate;
                     return;
 
-                }//Going left
+                }//Trying to go left
                 else if (xCordinate - 1 >= 0
                         && userGrid[xCordinate - 1][yCordinate] !== "2"
                         && userGrid[xCordinate - 1][yCordinate] !== "3") {
@@ -301,18 +304,19 @@ function makeComputerMove() {
                     nextPointToGoX = xCordinate - 1;
                     nextPointToGoY = yCordinate;
                     return;
-                }
+                }// No valid move
                 else {
-                    alert("NEVER SHOULD HAPPEN");
+
                     directionToGo = "up";
                     return;
                 }
             }
         }
+        //Computer has found a ship
     } else {
         if (directionToGo === "up") {
             if (userGrid[nextPointToGoX][nextPointToGoY] === "1") { //Hit
-                console.log("i got here")
+
                 verticalSuccesful = true;
                 userGrid[nextPointToGoX][nextPointToGoY] = "2";
                 if (nextPointToGoY - 1 >= 0
@@ -438,8 +442,7 @@ function makeComputerMove() {
                     nextPointToGoY = nextPointToGoY;
                     return;
                 }
-            }
-            else if (userGrid[nextPointToGoX][nextPointToGoY] === "0") {
+            } else if (userGrid[nextPointToGoX][nextPointToGoY] === "0") {
                 userGrid[nextPointToGoX][nextPointToGoY] = "3";
             }
             attackingShip = false;
@@ -505,6 +508,11 @@ function didCPUWin() {
     return true;
 }
 
+/**
+ * Randomizes the CPU's ships, based off a random number generator for the
+ * coordinates and whether the ship is vertical or horizontal
+ * 
+ */
 function  randomizeComputerShips() {
 
     var xCordinate = 0;
@@ -514,22 +522,22 @@ function  randomizeComputerShips() {
     var canPlace = false;
     var sizeOfShips = [5, 4, 3, 3, 2];
     var sizeOfShip;
+    
     //Iterating for the number of ships on the board
-
     for (a = 0; a < 5; a++) {
 
         sizeOfShip = sizeOfShips[a];
         //Placeing the cruisuer
         while (placeingShip === true) {
-
+            
+            //Creating the random variable 
             xCordinate = Math.floor((Math.random() * 10));
             yCordinate = Math.floor((Math.random() * 10));
             verticalOrHorizontal = Math.floor((Math.random() * 10) + 1);
 
-
-
             if (verticalOrHorizontal > 5) { //Vertical 
-
+                
+                //Trying to place the ship in a downwards Direction
                 if (!(yCordinate + sizeOfShip > 10)) {
                     //Checking in a downwords direction if any spots are taken
                     for (i = yCordinate; i < yCordinate + sizeOfShip; i++) {
@@ -549,10 +557,7 @@ function  randomizeComputerShips() {
                         canPlace = false;
                     }
                 }
-
-
-
-
+                //Trying to place the ship in a upwards Direction
                 if (!(yCordinate - sizeOfShip < 0)) {
                     if (placeingShip === true) {
                         //Checking in a upwards direction if any spots are taken
@@ -577,6 +582,8 @@ function  randomizeComputerShips() {
 
                 }
             } else { //Place the ship in the horizontal direction
+                
+                //Trying to place the ship in a right Direction
                 if (!(xCordinate + sizeOfShip > 10)) {
                     if (placeingShip === true) {
 
@@ -592,7 +599,6 @@ function  randomizeComputerShips() {
                             //Filling the values out for the ship
                             for (j = xCordinate; j < xCordinate + sizeOfShip; j++) {
                                 cpuGrid[j][yCordinate] = "-1";
-                                console.log(xCordinate + ", " + yCordinate);
                             }
                             placeingShip = false;
                             canPlace = false;
@@ -600,9 +606,9 @@ function  randomizeComputerShips() {
 
                     }
                 }
+                
+                //Trying to place the ship in a left Direction
                 if (!(xCordinate - sizeOfShip < 0) && placeingShip === true) {
-
-
 
                     //Checking in a left direction if any spots are taken
                     for (i = xCordinate; i > xCordinate - sizeOfShip; i--) {
@@ -617,19 +623,15 @@ function  randomizeComputerShips() {
                         //Filling the values out for the ship
                         for (j = xCordinate; j > xCordinate - sizeOfShip; j--) {
                             cpuGrid[j][yCordinate] = "-1";
-                            console.log(xCordinate + ", " + yCordinate);
                         }
                         placeingShip = false;
                         canPlace = false;
                     }
                 }
-
             }
         }
         placeingShip = true;
     }
-
-
 }
 
 
