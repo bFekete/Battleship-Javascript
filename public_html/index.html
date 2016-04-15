@@ -22,14 +22,24 @@ and open the template in the editor.
             <h1>Dank Battleship</h1><h3>by Brian Fekete and Jacob Daniel</h3>
         </div>
 
-        <form>
-            <input type="radio" name="ship" value="Battleship" > Battleship<br> 
-            <input type="radio" name="ship" value="Carrier"> Carrier<br>
-            <input type="radio" name="ship" value="Cruiser"> Cruiser<br>
-            <input type="radio" name="ship" value="Patrol"> Patrol<br>
-            <input type="radio" name="ship" value="Submarine"> Submarine<br>
-            
-        </form>
+        <div class="row">
+            <div class="col-sm-2">
+                <form>
+                    <input type="radio" name="ship" value="Battleship" > Battleship<br> 
+                    <input type="radio" name="ship" value="Carrier"> Carrier<br>
+                    <input type="radio" name="ship" value="Cruiser"> Cruiser<br>
+                    <input type="radio" name="ship" value="Patrol"> Patrol<br>
+                    <input type="radio" name="ship" value="Submarine"> Submarine<br>
+                </form>
+            </div>
+            <div class="col-sm-2">
+                <form>
+                    <input type="radio" name="orientation" value="Vertical" > Vertical<br> 
+                    <input type="radio" name="orientation" value="Horizontal" checked> Horizontal<br>
+                </form>
+            </div>
+        </div>
+
         <div id="gameContainer"></div>
 
     </div>

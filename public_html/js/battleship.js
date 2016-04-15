@@ -2,25 +2,26 @@
  * battleship.js
  *  
  */
-var OFFSET = 550; // Where the cpuGrid starts
+window.addEventListener("load", start, false);
 
-var canvas, context;
+var isGameStarted = false;
+var userShipCount = 0;
+var OFFSET = 550; // Where the cpuGrid starts
+var canvas, context, shipRadioButton, orientationRadioButton;
 var squareHeight, squareWidth;
-var radioButton;
 
 var userGrid, cpuGrid;
 
-//Variables to keep track of the Cpus move.
-var lastMove;
-var lastSuccessfulMove;
-var lastDirection;
-var LastSuccessfulDirection;
+//Variables to keep track of the Cpu's moves.
+var attackingShip = false;
+var indexPointX = 0;
+var indexPointY = 0;
+var directionToGo = "up";
+var nextPointToGoX = 0;
+var nextPointToGoY = 0;
+var indexPointX, indexPointY;
+var verticalSuccesful = false;
 
-function ship(name, size) {
-    this.name = name;
-    this.size = size;
-    this.sank = false;
-}
 
 /**
  * This function initializes the game and its variables.
@@ -28,7 +29,8 @@ function ship(name, size) {
  */
 function start() {
     var container = document.getElementById("gameContainer");
-    radioButton = document.getElementsByName("ship");
+    shipRadioButton = document.getElementsByName("ship");
+    orientationRadioButton = document.getElementsByName("orientation");
 
     canvas = document.createElement("canvas");
     canvas.addEventListener('click', handleClick);
@@ -48,53 +50,12 @@ function start() {
 
 function handleMove(e) {
     // Since in Firefox e.offsetX/Y is undefined...
-    xpos = e.offsetX === undefined ? e.layerX : e.offsetX;
-    ypos = e.offsetY === undefined ? e.layerY : e.offsetY;
+    var xpos = e.offsetX === undefined ? e.layerX : e.offsetX;
+    var ypos = e.offsetY === undefined ? e.layerY : e.offsetY;
     //console.log("Canvas Move: (" + xpos + ", " + ypos + ")");
 
     xCoord = Math.floor((xpos - canvas.getBoundingClientRect().left) / squareWidth) * squareWidth;
     yCoord = Math.floor((ypos - canvas.getBoundingClientRect().top) / squareHeight) * squareHeight;
-
-    // Carrier 5
-    var carrier = new ship("Carrier", 5);
-    // Battleship 4
-    var battleship = new ship("Battleship", 4);
-    // Submarine 3
-    var submarine = new ship("Submarine", 3);
-    // Cruiser 3
-    var cruiser = new ship("Cruiser", 3);
-    // Patrol 2
-    var patrol = new ship("Patrol", 2);
-
-    // Update the multple squares on the grid when ship is not placed
-    // and the radio button is selected
-    for (var i = 0; i < radioButton.length; i++) {
-        if (radioButton[i].checked) {
-            if (radioButton[i].value === "Battleship") {
-                for (var k = 0; k < battleship.size; k++) {
-                    updateGrid("gray", xCoord + (k * squareWidth), yCoord);
-                }
-            } else if (radioButton[i].value === "Carrier") {
-                for (var k = 0; k < carrier.size; k++) {
-                    updateGrid("gray", xCoord + (k * squareWidth), yCoord);
-                }
-            } else if (radioButton[i].value === "Cruiser") {
-                for (var k = 0; k < cruiser.size; k++) {
-                    updateGrid("gray", xCoord + (k * squareWidth), yCoord);
-                }
-            } else if (radioButton[i].value === "Patrol") {
-                for (var k = 0; k < patrol.size; k++) {
-                    updateGrid("gray", xCoord + (k * squareWidth), yCoord);
-                }
-            } else if (radioButton[i].value === "Submarine") {
-                for (var k = 0; k < submarine.size; k++) {
-                    updateGrid("gray", xCoord + (k * squareWidth), yCoord);
-                }
-            }
-        }
-
-    }
-
 }
 
 /**
@@ -104,42 +65,77 @@ function handleMove(e) {
  */
 function handleClick(e) {
     // Since in Firefox e.offsetX/Y is undefined...
-    xpos = e.offsetX === undefined ? e.layerX : e.offsetX;
-    ypos = e.offsetY === undefined ? e.layerY : e.offsetY;
-    console.log("Canvas Click: (" + xpos + ", " + ypos + ")");
+    var xpos = e.offsetX === undefined ? e.layerX : e.offsetX;
+    var ypos = e.offsetY === undefined ? e.layerY : e.offsetY;
 
     xCoord = Math.floor((xpos - canvas.getBoundingClientRect().left) / squareWidth) * squareWidth;
     yCoord = Math.floor((ypos - canvas.getBoundingClientRect().top) / squareHeight) * squareHeight;
 
     var placeShip = false;
+    var radioButtonIndex;
+    var shipSize;
+    var isVertical;
     /** Place ship **/
-    for (var i = 0; i < radioButton.length; i++) {
-        if (radioButton[i].checked) {
-            radioButton[i].checked = false;
-            radioButton[i].disabled = true;
+    for (var i = 0; i < shipRadioButton.length; i++) {
+        if (shipRadioButton[i].checked) {
+            if (shipRadioButton[i].value === "Battleship") {
+                shipSize = "4";
+            } else if (shipRadioButton[i].value === "Carrier") {
+                shipSize = "5";
+            } else if (shipRadioButton[i].value === "Cruiser") {
+                shipSize = "3";
+            } else if (shipRadioButton[i].value === "Patrol") {
+                shipSize = "2";
+            } else if (shipRadioButton[i].value === "Submarine") {
+                shipSize = "3";
+            }
+            radioButtonIndex = i;
             placeShip = true;
         }
     }
-
-//    /** Attack **/
-//    if (placeShip === false) {
-//        if (xCoord >= OFFSET) {
-//            cpuGrid[(xCoord - OFFSET) / 50][yCoord / 50] = "2";
-//            drawGrid(cpuGrid, OFFSET);
-//        } else if (xCoord < OFFSET) {
-//            userGrid[xCoord / 50][yCoord / 50] = "2";
-//            drawGrid(userGrid, 0);
-//        }
-//    }
-    x = xCoord / 50 - 11;
-    console.log(x);
-    y = yCoord / 50;
-    //makePlayerMove(x, y);
-    //drawGrid(cpuGrid, OFFSET);
-    while(didUserWin() === false){
-    makeComputerMove();
+    for (var i = 0; i < orientationRadioButton.length; i++) {
+        if (orientationRadioButton[i].checked) {
+            if (orientationRadioButton[i].value === "Vertical") {
+                isVertical = true;
+            } else {
+                isVertical = false;
+            }
+        }
+    }
+    if (placeShip === true) {
+        if (isValidShipPlacement(userGrid, xCoord / 50, yCoord / 50, isVertical, shipSize)) {
+            if (isVertical) {
+                for (var j = 0; j < shipSize; j++) {
+                    userGrid[xCoord / 50][yCoord / 50 + j] = "1";
+                }
+            } else {
+                for (var j = 0; j < shipSize; j++) {
+                    userGrid[(xCoord / 50) + j][yCoord / 50] = "1";
+                }
+            }
+            drawGrid(userGrid, 0);
+            shipRadioButton[radioButtonIndex].checked = false;
+            shipRadioButton[radioButtonIndex].disabled = true;
+            userShipCount++;
+        }
+    }
+    if (userShipCount === 5 && isGameStarted === false) { //Start the game
+        isGameStarted = true;
     }
 
+    if (isGameStarted === true) {
+        if (makePlayerMove((xCoord - OFFSET) / 50, yCoord / 50) === true) {
+            drawGrid(cpuGrid, OFFSET);
+            if (didUserWin() === true) {
+                isGameStarted = false;
+            }
+            makeComputerMove()
+            drawGrid(userGrid, 0);
+            if(didCPUWin() === true){
+                isGameStarted = false;
+            }
+        }
+    }
 }
 
 function updateGrid(color, xCoord, yCoord) {
@@ -162,7 +158,6 @@ function initializeGrid() {
         for (var j = 0; j < 10; j++) {
             userGrid[i][j] = "0";
             cpuGrid[i][j] = "0";
-
         }
     }
     randomizeComputerShips();
@@ -170,8 +165,8 @@ function initializeGrid() {
     drawGrid(cpuGrid, OFFSET);
 
     // Enables the radiobuttons
-    for (var i = 0; i < radioButton.length; i++) {
-        radioButton[i].disabled = false;
+    for (var i = 0; i < shipRadioButton.length; i++) {
+        shipRadioButton[i].disabled = false;
     }
 }
 
@@ -182,12 +177,11 @@ function initializeGrid() {
  * @returns {undefined}
  */
 function drawGrid(grid, offset) {
-
     for (var i = 0; i < 10; i++) {
         for (var j = 0; j < 10; j++) {
-            if (grid[i][j] === "0") {
+            if (grid[i][j] === "0") { //Open Water - Player
                 context.fillStyle = "blue";
-            } else if (grid[i][j] === "1") {//Open Water - Player
+            } else if (grid[i][j] === "1") { // Ship - Player
                 context.fillStyle = "gray";
             } else if (grid[i][j] === "2") { //Hit - Player/CPU
                 context.fillStyle = "red";
@@ -205,7 +199,33 @@ function drawGrid(grid, offset) {
     }
 }
 
-window.addEventListener("load", start, false);
+function isValidShipPlacement(grid, x, y, isVertical, shipSize) {
+    if (isVertical === true) {
+        for (var i = 0; i < shipSize; i++) {
+            if (grid[x][i + y] !== "0" || grid[x][i + y] !== "0") {
+                alert("Not a valid move!");
+                console.log("NOT VALID - VERTICAL");
+                return false;
+            }
+        }
+        console.log("VALID - VERTICAL");
+        return true;
+    } else { // Horizontal
+        //Checking in a right direction if any spots are taken
+        console.log("X:" + x);
+        console.log("Y:" + y);
+        for (var i = 0; i < shipSize; i++) {
+            console.log("i=" + i + " | x=" + x);
+            if (grid[x + i][y] !== "0" || grid[x + i][y] !== "0") {
+                console.log("NOT VALID - HORIZONTAL");
+                return false;
+            }
+        }
+        console.log("VALID - HORIZONTAL");
+        return true;
+    }
+
+}
 
 /**
  * Function that will handle the Computers move, based off a random number until
@@ -215,25 +235,219 @@ window.addEventListener("load", start, false);
  * 
  */
 function makeComputerMove() {
-    var tryingToFindValidMove = true;
-    while (true) {
-        xCordinate = Math.floor((Math.random() * 10));
-        yCordinate = Math.floor((Math.random() * 10));
-        if(cpuGrid[xCordinate][yCordinate] === "2" || cpuGrid[xCordinate][yCordinate] === "3" ){
-            continue;
-        }else if(cpuGrid[xCordinate][yCordinate] === "-1"){
-              cpuGrid[xCordinate][yCordinate] = "2";
-            drawGrid(cpuGrid, OFFSET);
+
+    if (attackingShip === false) {
+        //Trying to make a random move
+        while (true) {
+            //Getting random x and y coordinate
+            var xCordinate = Math.floor((Math.random() * 10));
+            var yCordinate = Math.floor((Math.random() * 10));
+
+            //Place already was hit or missed
+            if (userGrid[xCordinate][yCordinate] === "2" ||
+                    userGrid[xCordinate][yCordinate] === "3") {
+                //Try again
+                continue;
+            }//Hit
+            else if (userGrid[xCordinate][yCordinate] === "1") {
+                userGrid[xCordinate][yCordinate] = "2";
+                drawGrid(userGrid, 0);
+                attackingShip = true;
+                indexPointX = xCordinate;
+                indexPointY = yCordinate;
+            }//Miss
+            else if (userGrid[xCordinate][yCordinate] === "0") {
+                userGrid[xCordinate][yCordinate] = "3";
+                drawGrid(userGrid, 0);
+                return;
+            }
+            if (attackingShip === true) {
+                //Seting Next Point
+                //Going Up
+                if (yCordinate - 1 >= 0
+                        && userGrid[xCordinate][yCordinate - 1] !== "2"
+                        && userGrid[xCordinate][yCordinate - 1] !== "3") {
+                    directionToGo = "up";
+                    nextPointToGoX = xCordinate;
+                    nextPointToGoY = yCordinate - 1;
+                    console.log(nextPointToGoX + ", " + nextPointToGoY);
+                    return;
+                }//Going Down 
+                else if (yCordinate + 1 < 10
+                        && userGrid[xCordinate][yCordinate + 1] !== "2"
+                        && userGrid[xCordinate][yCordinate + 1] !== "3") {
+                    verticalSuccesful = false;
+                    directionToGo = "down";
+                    nextPointToGoX = xCordinate;
+                    nextPointToGoY = yCordinate + 1;
+                    return;
+
+                }//Going right 
+                else if (xCordinate + 1 < 10
+                        && userGrid[xCordinate + 1][yCordinate] !== "2"
+                        && userGrid[xCordinate + 1][yCordinate] !== "3") {
+                    verticalSuccesful = false;
+                    directionToGo = "right";
+                    nextPointToGoX = xCordinate + 1;
+                    nextPointToGoY = yCordinate;
+                    return;
+
+                }//Going left
+                else if (xCordinate - 1 >= 0
+                        && userGrid[xCordinate - 1][yCordinate] !== "2"
+                        && userGrid[xCordinate - 1][yCordinate] !== "3") {
+                    verticalSuccesful = false;
+                    directionToGo = "left";
+                    nextPointToGoX = xCordinate - 1;
+                    nextPointToGoY = yCordinate;
+                    return;
+                }
+                else {
+                    alert("NEVER SHOULD HAPPEN");
+                    directionToGo = "up";
+                    return;
+                }
+            }
+        }
+    } else {
+        if (directionToGo === "up") {
+            if (userGrid[nextPointToGoX][nextPointToGoY] === "1") { //Hit
+                console.log("i got here")
+                verticalSuccesful = true;
+                userGrid[nextPointToGoX][nextPointToGoY] = "2";
+                if (nextPointToGoY - 1 >= 0
+                        && userGrid[nextPointToGoX][nextPointToGoY - 1] !== "2"
+                        && userGrid[nextPointToGoX][nextPointToGoY - 1] !== "3") {
+                    directionToGo = "up";
+                    nextPointToGoX = nextPointToGoX;
+                    nextPointToGoY = nextPointToGoY - 1;
+                    console.log(nextPointToGoX + ", " + nextPointToGoY);
+                    return;
+                }
+            } else if (userGrid[nextPointToGoX][nextPointToGoY] === "0") {
+                userGrid[nextPointToGoX][nextPointToGoY] = "3";
+            }
+            //Checking to go down
+            if (indexPointY + 1 < 10
+                    && userGrid[indexPointX][indexPointY + 1] !== "2"
+                    && userGrid[indexPointX][indexPointY + 1] !== "3") {
+                verticalSuccesful = false;
+                directionToGo = "down";
+                nextPointToGoX = indexPointX;
+                nextPointToGoY = indexPointY + 1;
+                return;
+
+            }//Going right
+            else if (indexPointX + 1 < 10
+                    && userGrid[indexPointX + 1][indexPointY] !== "2"
+                    && userGrid[indexPointX + 1][indexPointY] !== "3") {
+                verticalSuccesful = false;
+                directionToGo = "right";
+                nextPointToGoX = indexPointX + 1;
+                nextPointToGoY = indexPointY;
+                return;
+
+            }//Going left
+            else if (indexPointX - 1 >= 0
+                    && userGrid[indexPointX - 1][indexPointY] !== "2"
+                    && userGrid[indexPointX - 1][indexPointY] !== "3") {
+                verticalSuccesful = false;
+                directionToGo = "left";
+                nextPointToGoX = indexPointX - 1;
+                nextPointToGoY = indexPointY;
+                return;
+
+            }
+            attackingShip = false;
+        } else if (directionToGo === "down") {
+            if (userGrid[nextPointToGoX][nextPointToGoY] === "1") {
+                verticalSuccesful = true;
+                userGrid[nextPointToGoX][nextPointToGoY] = "2";
+                if (nextPointToGoY + 1 < 10
+                        && userGrid[nextPointToGoX][nextPointToGoY + 1] !== "2"
+                        && userGrid[nextPointToGoX][nextPointToGoY + 1] !== "3") {
+                    verticalSuccesful = true;
+                    directionToGo = "down";
+                    nextPointToGoX = nextPointToGoX;
+                    nextPointToGoY = nextPointToGoY + 1;
+                    return;
+                }
+            } else if (userGrid[nextPointToGoX][nextPointToGoY] === "0") {
+                userGrid[nextPointToGoX][nextPointToGoY] = "3";
+            }
+            if (indexPointX + 1 < 10
+                    && userGrid[indexPointX + 1][indexPointY] !== "2"
+                    && userGrid[indexPointX + 1][indexPointY] !== "3"
+                    && verticalSuccesful === false) {
+                verticalSuccesful = false;
+                directionToGo = "right";
+                nextPointToGoX = indexPointX + 1;
+                nextPointToGoY = indexPointY;
+                return;
+            }//Going left
+            else if (indexPointX - 1 >= 0
+                    && userGrid[indexPointX - 1][indexPointY] !== "2"
+                    && userGrid[indexPointX - 1][indexPointY] !== "3"
+                    && verticalSuccesful === false) {
+                verticalSuccesful = false;
+                directionToGo = "left";
+                nextPointToGoX = indexPointX - 1;
+                nextPointToGoY = indexPointY;
+                return;
+            }
+            attackingShip = false;
+            //Going Right  
+        } else if (directionToGo === "right") {
+            //Next Point Was successful
+            if (userGrid[nextPointToGoX][nextPointToGoY] === "1") {
+                userGrid[nextPointToGoX][nextPointToGoY] = "2";
+                //Try going right again
+                if (nextPointToGoX + 1 < 10
+                        && userGrid[nextPointToGoX + 1][nextPointToGoY] !== "2"
+                        && userGrid[nextPointToGoX + 1][nextPointToGoY] !== "3") {
+                    verticalSuccesful = false;
+                    directionToGo = "right";
+                    nextPointToGoX = nextPointToGoX + 1;
+                    nextPointToGoY = nextPointToGoY;
+                    return;
+                }
+            } else if (userGrid[nextPointToGoX][nextPointToGoY] === "0") {
+                userGrid[nextPointToGoX][nextPointToGoY] = "3";
+            }
+            //Try going left
+            if (indexPointX - 1 >= 0
+                    && userGrid[indexPointX - 1][indexPointY] !== "2"
+                    && userGrid[indexPointX - 1][indexPointY] !== "3") {
+                verticalSuccesful = false;
+                directionToGo = "left";
+                nextPointToGoX = indexPointX - 1;
+                nextPointToGoY = indexPointY;
+                return;
+            }
+            attackingShip = false;
             return;
-          
-        }else{
-            cpuGrid[xCordinate][yCordinate] = "3";
-            drawGrid(cpuGrid, OFFSET);
+        } else {
+            if (userGrid[nextPointToGoX][nextPointToGoY] === "1") {
+                userGrid[nextPointToGoX][nextPointToGoY] = "2";
+                if (nextPointToGoX - 1 >= 0
+                        && userGrid[nextPointToGoX - 1][nextPointToGoY] !== "2"
+                        && userGrid[nextPointToGoX - 1][nextPointToGoY] !== "3") {
+                    verticalSuccesful = false;
+                    directionToGo = "left";
+                    nextPointToGoX = nextPointToGoX - 1;
+                    nextPointToGoY = nextPointToGoY;
+                    return;
+                }
+            }
+            else if (userGrid[nextPointToGoX][nextPointToGoY] === "0") {
+                userGrid[nextPointToGoX][nextPointToGoY] = "3";
+            }
+            attackingShip = false;
             return;
         }
     }
-
 }
+
 
 
 /**
@@ -244,20 +458,18 @@ function makeComputerMove() {
  * @returns {undefined}
  */
 function makePlayerMove(x, y) {
-
-
     if (cpuGrid[x][y] === "0") { //Player has missed
         cpuGrid[x][y] = "3";
         drawGrid(cpuGrid, OFFSET);
+        return true;
     } else if (cpuGrid[x][y] === "-1") { //Player has hit ship
         cpuGrid[x][y] = "2";
         drawGrid(cpuGrid, OFFSET);
+        return true;
+    } else {
+        return false;
     }
 
-    //Checking the board for any ships left to see if the game is over
-    if (didUserWin() === true) {
-        console.log("you won")
-    }
 }
 /**
  * Function to return whether the user won or not
@@ -272,6 +484,7 @@ function didUserWin() {
             }
         }
     }
+    alert("You won!");
     return true;
 }
 
@@ -283,20 +496,21 @@ function didUserWin() {
 function didCPUWin() {
     for (i = 0; i < 10; i++) {
         for (j = 0; j < 10; j++) {
-            if (userGrid[i][j] === "-1") {
+            if (userGrid[i][j] === "1") {
                 return false;
             }
         }
     }
+    alert("You lost!");
     return true;
 }
 
 function  randomizeComputerShips() {
 
-    xCordinate = 0;
-    yCordinate = 0;
-    verticalOrHorizontal = 0;
-    placeingShip = true;
+    var xCordinate = 0;
+    var yCordinate = 0;
+    var verticalOrHorizontal = 0;
+    var placeingShip = true;
     var canPlace = false;
     var sizeOfShips = [5, 4, 3, 3, 2];
     var sizeOfShip;
@@ -329,7 +543,7 @@ function  randomizeComputerShips() {
                         //Filling the values out for the ship
                         for (j = yCordinate; j < yCordinate + sizeOfShip; j++) {
                             cpuGrid[xCordinate][j] = "-1";
-                            console.log(xCordinate + ", " + yCordinate);
+                            //  console.log(xCordinate + ", " + yCordinate);
                         }
                         placeingShip = false;
                         canPlace = false;
