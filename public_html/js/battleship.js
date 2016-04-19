@@ -14,8 +14,6 @@ var userGrid, cpuGrid;
 
 //Variables to keep track of the Cpu's moves.
 var attackingShip = false;
-var indexPointX = 0;
-var indexPointY = 0;
 var directionToGo = "up";
 var nextPointToGoX = 0;
 var nextPointToGoY = 0;
@@ -47,7 +45,11 @@ function start() {
     container.appendChild(canvas);
 }
 
-
+/**
+ * This fucntion is the onmousemove listener for the canvas.
+ * @param {type} e Event
+ * @returns {undefined}
+ */
 function handleMove(e) {
     // Since in Firefox e.offsetX/Y is undefined...
     var xpos = e.offsetX === undefined ? e.layerX : e.offsetX;
@@ -60,7 +62,7 @@ function handleMove(e) {
 
 /**
  * This function is the click event listener for the canvas.
- * @param {type} e
+ * @param {type} e Event
  * @returns {undefined}
  */
 function handleClick(e) {
@@ -128,20 +130,19 @@ function handleClick(e) {
             drawGrid(cpuGrid, OFFSET);
             if (didUserWin() === true) {
                 isGameStarted = false;
-            }
-            makeComputerMove()
-            drawGrid(userGrid, 0);
-            if (didCPUWin() === true) {
-                isGameStarted = false;
+                userShipCount = 0;
+            } else {
+                makeComputerMove()
+                drawGrid(userGrid, 0);
+
+                if (didCPUWin() === true) {
+                    isGameStarted = false;
+                    userShipCount = 0;
+                }
+
             }
         }
     }
-}
-
-function updateGrid(color, xCoord, yCoord) {
-    context.fillStyle = color;
-    context.fillRect(xCoord, yCoord, squareWidth, squareHeight);
-    context.strokeRect(xCoord, yCoord, squareWidth, squareHeight);
 }
 
 /**
@@ -199,6 +200,17 @@ function drawGrid(grid, offset) {
     }
 }
 
+/**
+ * This function will return true if the placement of the ship is valid.
+ * The placement of a ship is invalid if its off the board or a ship is already
+ * on a point.
+ * @param {type} grid 2d array
+ * @param {type} x coordinate
+ * @param {type} y coordinate
+ * @param {type} isVertical boolean value on orientation
+ * @param {type} shipSize Size of the ship
+ * @returns {Boolean} 
+ */
 function isValidShipPlacement(grid, x, y, isVertical, shipSize) {
     if (isVertical === true) {
         for (var i = 0; i < shipSize; i++) {
@@ -242,24 +254,24 @@ function makeComputerMove() {
         while (true) {
 
             //Getting random x and y coordinate
-            var xCordinate = Math.floor((Math.random() * 10));
-            var yCordinate = Math.floor((Math.random() * 10));
+            var xCoordinate = Math.floor((Math.random() * 10));
+            var yCoordinate = Math.floor((Math.random() * 10));
 
             //Place already was hit or missed
-            if (userGrid[xCordinate][yCordinate] === "2" ||
-                    userGrid[xCordinate][yCordinate] === "3") {
+            if (userGrid[xCoordinate][yCoordinate] === "2" ||
+                    userGrid[xCoordinate][yCoordinate] === "3") {
                 continue;//Try again
             }
             //Place is a ship
-            else if (userGrid[xCordinate][yCordinate] === "1") {
-                userGrid[xCordinate][yCordinate] = "2";
+            else if (userGrid[xCoordinate][yCoordinate] === "1") {
+                userGrid[xCoordinate][yCoordinate] = "2";
                 drawGrid(userGrid, 0);
                 attackingShip = true;
-                indexPointX = xCordinate;
-                indexPointY = yCordinate;
+                indexPointX = xCoordinate;
+                indexPointY = yCoordinate;
             }//Place is open water
-            else if (userGrid[xCordinate][yCordinate] === "0") {
-                userGrid[xCordinate][yCordinate] = "3";
+            else if (userGrid[xCoordinate][yCoordinate] === "0") {
+                userGrid[xCoordinate][yCoordinate] = "3";
                 drawGrid(userGrid, 0);
                 return;
             }
@@ -267,46 +279,45 @@ function makeComputerMove() {
             if (attackingShip === true) {
 
                 //Trying to go up
-                if (yCordinate - 1 >= 0
-                        && userGrid[xCordinate][yCordinate - 1] !== "2"
-                        && userGrid[xCordinate][yCordinate - 1] !== "3") {
+                if (yCoordinate - 1 >= 0
+                        && userGrid[xCoordinate][yCoordinate - 1] !== "2"
+                        && userGrid[xCoordinate][yCoordinate - 1] !== "3") {
                     directionToGo = "up";
-                    nextPointToGoX = xCordinate;
-                    nextPointToGoY = yCordinate - 1;
+                    nextPointToGoX = xCoordinate;
+                    nextPointToGoY = yCoordinate - 1;
                     console.log(nextPointToGoX + ", " + nextPointToGoY);
                     return;
                 }//Trying to go down
-                else if (yCordinate + 1 < 10
-                        && userGrid[xCordinate][yCordinate + 1] !== "2"
-                        && userGrid[xCordinate][yCordinate + 1] !== "3") {
+                else if (yCoordinate + 1 < 10
+                        && userGrid[xCoordinate][yCoordinate + 1] !== "2"
+                        && userGrid[xCoordinate][yCoordinate + 1] !== "3") {
                     verticalSuccesful = false;
                     directionToGo = "down";
-                    nextPointToGoX = xCordinate;
-                    nextPointToGoY = yCordinate + 1;
+                    nextPointToGoX = xCoordinate;
+                    nextPointToGoY = yCoordinate + 1;
                     return;
 
                 }//Trying to go right
-                else if (xCordinate + 1 < 10
-                        && userGrid[xCordinate + 1][yCordinate] !== "2"
-                        && userGrid[xCordinate + 1][yCordinate] !== "3") {
+                else if (xCoordinate + 1 < 10
+                        && userGrid[xCoordinate + 1][yCoordinate] !== "2"
+                        && userGrid[xCoordinate + 1][yCoordinate] !== "3") {
                     verticalSuccesful = false;
                     directionToGo = "right";
-                    nextPointToGoX = xCordinate + 1;
-                    nextPointToGoY = yCordinate;
+                    nextPointToGoX = xCoordinate + 1;
+                    nextPointToGoY = yCoordinate;
                     return;
 
                 }//Trying to go left
-                else if (xCordinate - 1 >= 0
-                        && userGrid[xCordinate - 1][yCordinate] !== "2"
-                        && userGrid[xCordinate - 1][yCordinate] !== "3") {
+                else if (xCoordinate - 1 >= 0
+                        && userGrid[xCoordinate - 1][yCoordinate] !== "2"
+                        && userGrid[xCoordinate - 1][yCoordinate] !== "3") {
                     verticalSuccesful = false;
                     directionToGo = "left";
-                    nextPointToGoX = xCordinate - 1;
-                    nextPointToGoY = yCordinate;
+                    nextPointToGoX = xCoordinate - 1;
+                    nextPointToGoY = yCoordinate;
                     return;
                 }// No valid move
                 else {
-
                     directionToGo = "up";
                     return;
                 }
@@ -316,7 +327,6 @@ function makeComputerMove() {
     } else {
         if (directionToGo === "up") {
             if (userGrid[nextPointToGoX][nextPointToGoY] === "1") { //Hit
-
                 verticalSuccesful = true;
                 userGrid[nextPointToGoX][nextPointToGoY] = "2";
                 if (nextPointToGoY - 1 >= 0
@@ -340,7 +350,6 @@ function makeComputerMove() {
                 nextPointToGoX = indexPointX;
                 nextPointToGoY = indexPointY + 1;
                 return;
-
             }//Going right
             else if (indexPointX + 1 < 10
                     && userGrid[indexPointX + 1][indexPointY] !== "2"
@@ -350,7 +359,6 @@ function makeComputerMove() {
                 nextPointToGoX = indexPointX + 1;
                 nextPointToGoY = indexPointY;
                 return;
-
             }//Going left
             else if (indexPointX - 1 >= 0
                     && userGrid[indexPointX - 1][indexPointY] !== "2"
@@ -360,7 +368,6 @@ function makeComputerMove() {
                 nextPointToGoX = indexPointX - 1;
                 nextPointToGoY = indexPointY;
                 return;
-
             }
             attackingShip = false;
         } else if (directionToGo === "down") {
@@ -456,8 +463,8 @@ function makeComputerMove() {
 /**
  * Handles a players move and draws on the grid based on whether the move was
  * successful or not
- * @param {type} x X cordinate of the player's move.
- * @param {type} y Y cordinate of the player's move.
+ * @param {type} x X coordinate of the player's move.
+ * @param {type} y Y coordinate of the player's move.
  * @returns {undefined}
  */
 function makePlayerMove(x, y) {
@@ -472,7 +479,6 @@ function makePlayerMove(x, y) {
     } else {
         return false;
     }
-
 }
 /**
  * Function to return whether the user won or not
@@ -513,35 +519,33 @@ function didCPUWin() {
  * coordinates and whether the ship is vertical or horizontal
  * 
  */
-function  randomizeComputerShips() {
-
-    var xCordinate = 0;
-    var yCordinate = 0;
+function randomizeComputerShips() {
+    var xCoordinate = 0;
+    var yCoordinate = 0;
     var verticalOrHorizontal = 0;
     var placeingShip = true;
     var canPlace = false;
     var sizeOfShips = [5, 4, 3, 3, 2];
     var sizeOfShip;
-    
+
     //Iterating for the number of ships on the board
     for (a = 0; a < 5; a++) {
 
         sizeOfShip = sizeOfShips[a];
         //Placeing the cruisuer
         while (placeingShip === true) {
-            
             //Creating the random variable 
-            xCordinate = Math.floor((Math.random() * 10));
-            yCordinate = Math.floor((Math.random() * 10));
+            xCoordinate = Math.floor((Math.random() * 10));
+            yCoordinate = Math.floor((Math.random() * 10));
             verticalOrHorizontal = Math.floor((Math.random() * 10) + 1);
 
             if (verticalOrHorizontal > 5) { //Vertical 
-                
+
                 //Trying to place the ship in a downwards Direction
-                if (!(yCordinate + sizeOfShip > 10)) {
+                if (!(yCoordinate + sizeOfShip > 10)) {
                     //Checking in a downwords direction if any spots are taken
-                    for (i = yCordinate; i < yCordinate + sizeOfShip; i++) {
-                        if (cpuGrid[xCordinate][i] === "-1") {
+                    for (i = yCoordinate; i < yCoordinate + sizeOfShip; i++) {
+                        if (cpuGrid[xCoordinate][i] === "-1") {
                             canPlace = false;
                             break;
                         }
@@ -549,20 +553,19 @@ function  randomizeComputerShips() {
                     }
                     if (canPlace === true) {
                         //Filling the values out for the ship
-                        for (j = yCordinate; j < yCordinate + sizeOfShip; j++) {
-                            cpuGrid[xCordinate][j] = "-1";
-                            //  console.log(xCordinate + ", " + yCordinate);
+                        for (j = yCoordinate; j < yCoordinate + sizeOfShip; j++) {
+                            cpuGrid[xCoordinate][j] = "-1";
                         }
                         placeingShip = false;
                         canPlace = false;
                     }
                 }
                 //Trying to place the ship in a upwards Direction
-                if (!(yCordinate - sizeOfShip < 0)) {
+                if (!(yCoordinate - sizeOfShip < 0)) {
                     if (placeingShip === true) {
                         //Checking in a upwards direction if any spots are taken
-                        for (i = yCordinate; i > yCordinate - sizeOfShip; i--) {
-                            if (cpuGrid[xCordinate][i] === "-1") {
+                        for (i = yCoordinate; i > yCoordinate - sizeOfShip; i--) {
+                            if (cpuGrid[xCoordinate][i] === "-1") {
                                 canPlace = false;
                                 break;
                             }
@@ -570,9 +573,9 @@ function  randomizeComputerShips() {
                         }
                         if (canPlace === true) {
                             //Filling the values out for the ship
-                            for (j = yCordinate; j > yCordinate - sizeOfShip; j--) {
-                                cpuGrid[xCordinate][j] = "-1";
-                                console.log(xCordinate + ", " + yCordinate);
+                            for (j = yCoordinate; j > yCoordinate - sizeOfShip; j--) {
+                                cpuGrid[xCoordinate][j] = "-1";
+                                console.log(xCoordinate + ", " + yCoordinate);
                             }
                             placeingShip = false;
                             canPlace = false;
@@ -582,14 +585,14 @@ function  randomizeComputerShips() {
 
                 }
             } else { //Place the ship in the horizontal direction
-                
+
                 //Trying to place the ship in a right Direction
-                if (!(xCordinate + sizeOfShip > 10)) {
+                if (!(xCoordinate + sizeOfShip > 10)) {
                     if (placeingShip === true) {
 
                         //Checking in a right direction if any spots are taken
-                        for (i = xCordinate; i < xCordinate + sizeOfShip; i++) {
-                            if (cpuGrid[i][yCordinate] === "-1") {
+                        for (i = xCoordinate; i < xCoordinate + sizeOfShip; i++) {
+                            if (cpuGrid[i][yCoordinate] === "-1") {
                                 canPlace = false;
                                 break;
                             }
@@ -597,8 +600,8 @@ function  randomizeComputerShips() {
                         }
                         if (canPlace === true) {
                             //Filling the values out for the ship
-                            for (j = xCordinate; j < xCordinate + sizeOfShip; j++) {
-                                cpuGrid[j][yCordinate] = "-1";
+                            for (j = xCoordinate; j < xCoordinate + sizeOfShip; j++) {
+                                cpuGrid[j][yCoordinate] = "-1";
                             }
                             placeingShip = false;
                             canPlace = false;
@@ -606,13 +609,13 @@ function  randomizeComputerShips() {
 
                     }
                 }
-                
+
                 //Trying to place the ship in a left Direction
-                if (!(xCordinate - sizeOfShip < 0) && placeingShip === true) {
+                if (!(xCoordinate - sizeOfShip < 0) && placeingShip === true) {
 
                     //Checking in a left direction if any spots are taken
-                    for (i = xCordinate; i > xCordinate - sizeOfShip; i--) {
-                        if (cpuGrid[i][yCordinate] === "-1") {
+                    for (i = xCoordinate; i > xCoordinate - sizeOfShip; i--) {
+                        if (cpuGrid[i][yCoordinate] === "-1") {
                             canPlace = false;
                             break;
                         }
@@ -621,8 +624,8 @@ function  randomizeComputerShips() {
 
                     if (canPlace === true) {
                         //Filling the values out for the ship
-                        for (j = xCordinate; j > xCordinate - sizeOfShip; j--) {
-                            cpuGrid[j][yCordinate] = "-1";
+                        for (j = xCoordinate; j > xCoordinate - sizeOfShip; j--) {
+                            cpuGrid[j][yCoordinate] = "-1";
                         }
                         placeingShip = false;
                         canPlace = false;
