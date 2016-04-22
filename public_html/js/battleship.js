@@ -67,8 +67,9 @@ function handleMove(e) {
  */
 function handleClick(e) {
     // Since in Firefox e.offsetX/Y is undefined...
-    var xpos = e.offsetX === undefined ? e.layerX : e.offsetX;
-    var ypos = e.offsetY === undefined ? e.layerY : e.offsetY;
+    var xpos =  e.clientX;
+    var ypos = e.clientY;
+    console.log(e.clientX);
 
     xCoord = Math.floor((xpos - canvas.getBoundingClientRect().left) / squareWidth) * squareWidth;
     yCoord = Math.floor((ypos - canvas.getBoundingClientRect().top) / squareHeight) * squareHeight;
@@ -215,7 +216,6 @@ function isValidShipPlacement(grid, x, y, isVertical, shipSize) {
     if (isVertical === true) {
         for (var i = 0; i < shipSize; i++) {
             if (grid[x][i + y] !== "0" || grid[x][i + y] !== "0") {
-                alert("Not a valid move!");
                 console.log("NOT VALID - VERTICAL");
                 return false;
             }
